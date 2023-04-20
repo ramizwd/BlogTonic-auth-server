@@ -1,9 +1,14 @@
-import express from 'express';
-require('dotenv').config();
+import app from './app';
+import connectToMongoDB from './utils/db';
 
-const port = process.env.PORT || 3000;
-const app = express();
+const port = process.env.PORT || 3001;
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// Start the server
+(async () => {
+  try {
+    await connectToMongoDB();
+    app.listen(port, () => console.log(`Server running on port ${port}`));
+  } catch (err) {
+    console.error('Server Error: ', (err as Error).message);
+  }
+})();
