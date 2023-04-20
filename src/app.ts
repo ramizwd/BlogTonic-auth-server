@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import api from './api';
 import MessageResponse from './interfaces/MessageResponse';
+import {errorHandler, notFound} from './middlewares';
 
 const app = express();
 
@@ -17,5 +18,6 @@ app.get<{}, MessageResponse>('/', (_req, res) => {
 });
 
 app.use('/api/v1', api);
-
+app.use(notFound);
+app.use(errorHandler);
 export default app;
