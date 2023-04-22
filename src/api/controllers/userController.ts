@@ -6,6 +6,7 @@ import {HTTP_STATUS_CODES} from '../../utils/constants';
 import argon2 from 'argon2';
 import DBMessageResponse from '../../interfaces/DBMessageResponse';
 
+// Get all users from the database, except the password and isAdmin fields
 const getUsers = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await userModel.find().select('-password -isAdmin');
@@ -21,6 +22,7 @@ const getUsers = async (_req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+// Get a specific user from the database, except the password and isAdmin fields
 const getUser = async (
   {params: {id}}: Request<{id: string}>,
   res: Response,
@@ -40,6 +42,7 @@ const getUser = async (
   }
 };
 
+// Create a new user in the database, and return the new user
 const createUser = async (
   {body}: Request<{}, {}, User>,
   res: Response,
