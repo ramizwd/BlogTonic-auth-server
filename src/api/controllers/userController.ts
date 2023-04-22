@@ -5,6 +5,7 @@ import {User} from '../../interfaces/User';
 import {HTTP_STATUS_CODES} from '../../utils/constants';
 import argon2 from 'argon2';
 import DBMessageResponse from '../../interfaces/DBMessageResponse';
+import {validationResult} from 'express-validator';
 
 // Get all users from the database, except the password and isAdmin fields
 const getUsers = async (_req: Request, res: Response, next: NextFunction) => {
@@ -24,12 +25,23 @@ const getUsers = async (_req: Request, res: Response, next: NextFunction) => {
 
 // Get a specific user from the database, except the password and isAdmin fields
 const getUser = async (
-  {params: {id}}: Request<{id: string}>,
+  req: Request<{id: string}>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const user = await userModel.findById(id).select('-password -isAdmin');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => error.msg)
+        .join(', ');
+      throw new CustomError(messages, HTTP_STATUS_CODES.NOT_FOUND);
+    }
+
+    const user = await userModel
+      .findById(req.params.id)
+      .select('-password -isAdmin');
 
     if (!user) {
       next(new CustomError('User not found', HTTP_STATUS_CODES.NOT_FOUND));
@@ -44,12 +56,21 @@ const getUser = async (
 
 // Create a new user in the database, and return the new user
 const createUser = async (
-  {body}: Request<{}, {}, User>,
+  req: Request<{}, {}, User>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const user = body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => error.msg)
+        .join(', ');
+      throw new CustomError(messages, HTTP_STATUS_CODES.NOT_FOUND);
+    }
+
+    const user = req.body;
     const hashedPassword = await argon2.hash(user.password);
 
     const userToCreate = {
