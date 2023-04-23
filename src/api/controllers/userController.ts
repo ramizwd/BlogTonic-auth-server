@@ -6,6 +6,7 @@ import {HTTP_STATUS_CODES} from '../../utils/constants';
 import argon2 from 'argon2';
 import DBMessageResponse from '../../interfaces/DBMessageResponse';
 import {validationResult} from 'express-validator';
+import {UserOutput} from '../../interfaces/User';
 
 // Get all users from the database, except the password and isAdmin fields
 const getUsers = async (_req: Request, res: Response, next: NextFunction) => {
@@ -71,31 +72,96 @@ const createUser = async (
     }
 
     const user = req.body;
-    const hashedPassword = await argon2.hash(user.password);
+    const password = await argon2.hash(user.password);
 
     const userToCreate = {
-      username: user.username,
-      email: user.email,
-      password: hashedPassword,
+      ...user,
+      password,
     };
 
     const newUser = await userModel.create(userToCreate);
 
-    const userRes = {
-      id: newUser._id,
-      username: newUser.username,
-      email: newUser.email,
-    };
+    const {_id: id, username, email} = newUser;
 
     const response: DBMessageResponse = {
       message: 'User created',
-      user: userRes,
+      user: {id, username, email},
     };
 
     res.status(HTTP_STATUS_CODES.CREATED).json(response);
+  } catch (error) {
+    next(new CustomError('Duplicate entry', HTTP_STATUS_CODES.OK));
+  }
+};
+
+// Update a user in the database, and return the updated user
+const updateUser = async (
+  req: Request<{}, {}, User>,
+  res: Response<{}, {user: UserOutput}>,
+  next: NextFunction
+) => {
+  try {
+    const user = req.body;
+    const {user: loggedInUser} = res.locals;
+
+    const password = user.password
+      ? await argon2.hash(user.password)
+      : undefined;
+
+    const userToUpdate = {
+      ...user,
+      password,
+    };
+
+    const updatedUser = await userModel
+      .findByIdAndUpdate(loggedInUser.id, userToUpdate, {new: true})
+      .select('-password -isAdmin');
+
+    if (!updatedUser) {
+      next(new CustomError('User not found', HTTP_STATUS_CODES.NOT_FOUND));
+      return;
+    }
+
+    const {_id: id, username, email} = updatedUser;
+
+    const response: DBMessageResponse = {
+      message: 'User updated',
+      user: {id, username, email},
+    };
+
+    res.status(HTTP_STATUS_CODES.OK).json(response);
   } catch (error) {
     next(error);
   }
 };
 
-export {getUsers, getUser, createUser};
+// Delete a user from the database, and return the deleted user
+const deleteUser = async (
+  _req: Request,
+  res: Response<{}, {user: UserOutput}>,
+  next: NextFunction
+) => {
+  try {
+    const {user: loggedInUser} = res.locals;
+
+    const deletedUser = await userModel.findByIdAndDelete(loggedInUser.id);
+
+    if (!deletedUser) {
+      next(new CustomError('User not found', HTTP_STATUS_CODES.NOT_FOUND));
+      return;
+    }
+
+    const {_id: id, username, email} = deletedUser;
+
+    const response: DBMessageResponse = {
+      message: 'User deleted',
+      user: {id, username, email},
+    };
+
+    res.status(HTTP_STATUS_CODES.OK).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {getUsers, getUser, createUser, updateUser, deleteUser};
