@@ -3,10 +3,12 @@ import userModel from '../models/userModel';
 import CustomError from '../../classes/CustomError';
 import {User} from '../../interfaces/User';
 import {HTTP_STATUS_CODES} from '../../utils/constants';
-import argon2 from 'argon2';
+import bcrypt from 'bcryptjs';
 import DBMessageResponse from '../../interfaces/DBMessageResponse';
 import {validationResult} from 'express-validator';
 import {UserOutput} from '../../interfaces/User';
+
+const salt = bcrypt.genSaltSync(10);
 
 // Get all users from the database, except the password and isAdmin fields
 const getUsers = async (_req: Request, res: Response, next: NextFunction) => {
@@ -72,7 +74,7 @@ const createUser = async (
     }
 
     const user = req.body;
-    const password = await argon2.hash(user.password);
+    const password = await bcrypt.hash(user.password, salt);
 
     const userToCreate = {
       ...user,
@@ -105,7 +107,7 @@ const updateUser = async (
     const {user: loggedInUser} = res.locals;
 
     const password = user.password
-      ? await argon2.hash(user.password)
+      ? await bcrypt.hash(user.password, salt)
       : undefined;
 
     const userToUpdate = {
