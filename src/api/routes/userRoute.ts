@@ -60,6 +60,6 @@ router
   .delete(authorize, deleteUser);
 
 // Define the routes for a specific user
-router.route('/:id').get(param('id').isNumeric(), getUser);
+router.route('/:id').get(param('id').notEmpty(), getUser);
 
 export default router;
