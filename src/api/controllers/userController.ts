@@ -166,4 +166,103 @@ const deleteUser = async (
   }
 };
 
-export {getUsers, getUser, createUser, updateUser, deleteUser};
+// Update user as admin
+const updateUserAsAdmin = async (
+  req: Request<{}, {}, User>,
+  res: Response<{}, {user: UserOutput}>,
+  next: NextFunction
+) => {
+  try {
+    if (!res.locals.user.isAdmin) {
+      next(
+        new CustomError(
+          'Not authorized to update user',
+          HTTP_STATUS_CODES.UNAUTHORIZED
+        )
+      );
+      return;
+    }
+
+    let password = '';
+    const user = req.body;
+
+    if (user.password) {
+      password = await bcrypt.hash(user.password, salt);
+    }
+
+    const userToUpdate = {
+      ...user,
+      password,
+    };
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+      user.id,
+      userToUpdate,
+      {
+        new: true,
+      }
+    );
+
+    if (!updatedUser) {
+      next(new CustomError('User not found', HTTP_STATUS_CODES.NOT_FOUND));
+      return;
+    }
+
+    const {_id: userId, username, email} = updatedUser;
+
+    const response: DBMessageResponse = {
+      message: 'User updated',
+      user: {id: userId, username, email},
+    };
+
+    res.status(HTTP_STATUS_CODES.OK).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete user as admin
+const deleteUserAsAdmin = async (
+  req: Request,
+  res: Response<{}, {user: UserOutput}>,
+  next: NextFunction
+) => {
+  try {
+    if (!res.locals.user.isAdmin) {
+      next(
+        new CustomError(
+          'You are not authorized to delete user',
+          HTTP_STATUS_CODES.UNAUTHORIZED
+        )
+      );
+    }
+
+    const deleteUser = await userModel.findByIdAndDelete(req.params.id);
+
+    if (!deleteUser) {
+      next(new CustomError('User not found', HTTP_STATUS_CODES.NOT_FOUND));
+      return;
+    }
+
+    const {_id: id, username, email} = deleteUser;
+
+    const response: DBMessageResponse = {
+      message: 'User deleted',
+      user: {id, username, email},
+    };
+
+    res.status(HTTP_STATUS_CODES.OK).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  getUsers,
+  getUser,
+  createUser,
+  updateUser,
+  deleteUser,
+  updateUserAsAdmin,
+  deleteUserAsAdmin,
+};
