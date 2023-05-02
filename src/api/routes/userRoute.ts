@@ -5,6 +5,8 @@ import {
   getUser,
   updateUser,
   deleteUser,
+  deleteUserAsAdmin,
+  updateUserAsAdmin,
 } from '../controllers/userController';
 import {param, body} from 'express-validator';
 import {authorize} from '../../middlewares/authorize';
@@ -60,6 +62,10 @@ router
   .delete(authorize, deleteUser);
 
 // Define the routes for a specific user
-router.route('/:id').get(param('id').notEmpty(), getUser);
+router
+  .route('/:id')
+  .get(param('id').notEmpty(), getUser)
+  .put(authorize, updateUserAsAdmin)
+  .delete(authorize, deleteUserAsAdmin);
 
 export default router;
