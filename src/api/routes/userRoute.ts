@@ -37,7 +37,6 @@ router
     createUser
   )
   .put(
-    authorize,
     body('username')
       .optional()
       .isAlphanumeric()
@@ -57,6 +56,7 @@ router
       .withMessage('Password must be at least 6 characters long')
       .trim()
       .escape(),
+    authorize,
     updateUser
   )
   .delete(authorize, deleteUser);
@@ -65,7 +65,29 @@ router
 router
   .route('/:id')
   .get(param('id').notEmpty(), getUser)
-  .put(authorize, updateUserAsAdmin)
+  .put(
+    body('username')
+      .optional()
+      .isAlphanumeric()
+      .withMessage('Username can only contain alphanumeric characters')
+      .isLength({min: 3, max: 20})
+      .withMessage('Username must be between 3 and 20 characters long')
+      .trim()
+      .escape(),
+    body('email')
+      .optional()
+      .isEmail()
+      .withMessage('Invalid email address')
+      .normalizeEmail(),
+    body('password')
+      .optional()
+      .isLength({min: 6})
+      .withMessage('Password must be at least 6 characters long')
+      .trim()
+      .escape(),
+    authorize,
+    updateUserAsAdmin
+  )
   .delete(authorize, deleteUserAsAdmin);
 
 export default router;
