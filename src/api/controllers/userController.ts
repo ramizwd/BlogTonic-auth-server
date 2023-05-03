@@ -103,6 +103,15 @@ const updateUser = async (
   next: NextFunction
 ) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => error.msg)
+        .join(', ');
+      throw new CustomError(messages, HTTP_STATUS_CODES.NOT_FOUND);
+    }
+
     const user = req.body;
     const {user: loggedInUser} = res.locals;
 
@@ -139,11 +148,20 @@ const updateUser = async (
 
 // Delete a user from the database, and return the deleted user
 const deleteUser = async (
-  _req: Request,
+  req: Request,
   res: Response<{}, {user: UserOutput}>,
   next: NextFunction
 ) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => error.msg)
+        .join(', ');
+      throw new CustomError(messages, HTTP_STATUS_CODES.NOT_FOUND);
+    }
+
     const {user: loggedInUser} = res.locals;
 
     const deletedUser = await userModel.findByIdAndDelete(loggedInUser.id);
@@ -173,6 +191,15 @@ const updateUserAsAdmin = async (
   next: NextFunction
 ) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => error.msg)
+        .join(', ');
+      throw new CustomError(messages, HTTP_STATUS_CODES.NOT_FOUND);
+    }
+
     if (!res.locals.user.isAdmin) {
       next(
         new CustomError(
@@ -228,6 +255,15 @@ const deleteUserAsAdmin = async (
   next: NextFunction
 ) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => error.msg)
+        .join(', ');
+      throw new CustomError(messages, HTTP_STATUS_CODES.NOT_FOUND);
+    }
+
     if (!res.locals.user.isAdmin) {
       next(
         new CustomError(
