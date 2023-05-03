@@ -168,7 +168,7 @@ const deleteUser = async (
 
 // Update user as admin
 const updateUserAsAdmin = async (
-  req: Request<{}, {}, User>,
+  req: Request<{id: string}, {}, User>,
   res: Response<{}, {user: UserOutput}>,
   next: NextFunction
 ) => {
@@ -186,6 +186,8 @@ const updateUserAsAdmin = async (
     let password = '';
     const user = req.body;
 
+    const userToUpdateId = req.params.id;
+
     if (user.password) {
       password = await bcrypt.hash(user.password, salt);
     }
@@ -195,13 +197,11 @@ const updateUserAsAdmin = async (
       password,
     };
 
-    const updatedUser = await userModel.findByIdAndUpdate(
-      user.id,
-      userToUpdate,
-      {
+    const updatedUser = await userModel
+      .findByIdAndUpdate(userToUpdateId, userToUpdate, {
         new: true,
-      }
-    );
+      })
+      .select('-password -isAdmin');
 
     if (!updatedUser) {
       next(new CustomError('User not found', HTTP_STATUS_CODES.NOT_FOUND));
