@@ -1,12 +1,12 @@
 # BlogTonic Auth Server
 
-This is a Node.js server that provides authentication functionality through a REST API. It allows users to create accounts, log in, and log out. This API can be used by a [Node.js GraphQL](https://github.com/ramizwd/BlogTonic-backend) server to manage user authentication, creating, updating, and deletion.
+This is a Node.js server that provides authentication functionality through a REST API. This API can be used by a [GraphQL Server](https://github.com/ramizwd/BlogTonic-backend) server to manage user authentication, creating, updating, and deletion.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (version 16 or higher)
+- [Node.js](https://nodejs.org/en) (version 16.x or higher)
 - npm or yarn package manager
 
 ### Installing
@@ -238,4 +238,4 @@ Updates the details of a user account from an admin account.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/ramizwd/BlogTonic-auth-server/blob/main/LICENSE) file for details.
